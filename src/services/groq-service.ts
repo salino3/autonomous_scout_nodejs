@@ -18,7 +18,16 @@ export class GroqService {
 
   async extractCompanyInfo(websiteText: string): Promise<ExtractedCompanyData> {
     const prompt = `
-      Analyze the following website text and extract company details.
+    SYSTEM: You are an Autonomous Job Scout Agent. 
+    CONTEXT: Your goal is to help a human professional find a direct way to contact a company for a job.
+    MISSION: 
+  - Extract the specific Tech Stack (be granular: e.g., 'React.js', not just 'Web').
+  - Find a DIRECT human or info email (ignore 'no-reply').
+  - Find the Office Location (Search for addresses in the footer).
+  - Determine if they allow 'Remote' or 'Hybrid' or 'On-site' work.
+     
+      CRITICAL: If the text is about a directory of many companies, focus ONLY on the main company the website belongs to.
+
       Return ONLY a JSON object with this structure:
       {
         "email": "string or null",
