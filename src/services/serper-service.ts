@@ -1,5 +1,5 @@
 import axios from "axios";
-import { CONFIG } from "../config/constants.js";
+import { API_KEYS } from "../config/constants.js";
 
 export interface SerperResult {
   title: string;
@@ -11,9 +11,26 @@ export class SerperService {
   private apiKey: string;
 
   constructor() {
-    this.apiKey = process.env.SERPER_API_KEY || "";
+    this.apiKey = API_KEYS.SERPER || "";
     if (!this.apiKey) {
       throw new Error("SERPER_API_KEY is missing from environment variables");
+    }
+  }
+
+  /**
+   * Uses Jina Reader to convert a URL into readable Markdown text
+   */
+  async getWebsiteText(url: string): Promise<string> {
+    try {
+      const response = await axios.get(`https://r.jina.ai/${url}`, {
+        headers: {
+          "Accept": "text/plain",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to scrape ${url}:`, error);
+      return "";
     }
   }
 
@@ -27,7 +44,7 @@ export class SerperService {
     const data = JSON.stringify({
       q: query,
       page: page,
-      num: 10, // We take 10 per page to filter through them
+      num: 10,
     });
 
     const config = {
