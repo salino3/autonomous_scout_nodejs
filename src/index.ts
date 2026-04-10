@@ -1,10 +1,14 @@
 import express, { type Request, type Response } from "express";
-import { pool } from "./db.js"; // Ensure the path matches your structure
+import { pool } from "./db.js";
+import searchRouter from "./routes/search-routes.js";
 import { CONFIG } from "./config/constants.js";
 
 const app = express();
 
 app.use(express.json());
+
+// Routes
+app.use("/api", searchRouter);
 
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "OK", message: "Scout Agent is active" });
