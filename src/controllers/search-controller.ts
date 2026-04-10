@@ -20,7 +20,7 @@ export class SearchController {
       let candidates = [];
 
       for (const item of rawResults) {
-        // A. Filter Directories (MANDATORY - we never want Glassdoor)
+        // A. Filter Directories (MANDATORY - we never want Directories)
         if (!isRealCompanySite(item.link)) continue;
 
         try {
