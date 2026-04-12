@@ -42,4 +42,28 @@ export class AuthUserService {
       throw new Error("An unexpected error occurred during signup.");
     }
   }
+
+  //
+  async loginUser(email: string, password_plain: string): Promise<UserDTO> {
+    const query = `SELECT * FROM users WHERE email = $1`;
+    const result = await pool.query(query, [email]);
+
+    const user = result.rows[0];
+
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    const isMatch = await bcrypt.compare(password_plain, user.password_hash);
+    if (!isMatch) {
+      throw new Error("Invalid email or password");
+    }
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    };
+  }
 }
