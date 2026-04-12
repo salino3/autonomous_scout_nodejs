@@ -15,8 +15,6 @@ export class AuthController {
           .json({ error: "Email, username and password are required" });
       }
 
-      // Pass 'password' here.
-      // Note: Later we will add a hashing step before this!
       const newUser = await authService.createUser(
         username,
         email,
