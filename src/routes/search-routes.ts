@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { SearchController } from "../controllers/search-controller.js";
+import { authMiddleware } from "../middlewares/auth-middleware.js";
 
 const router = Router();
 
-router.post("/search", SearchController.executeSearch);
+router.post("/search", authMiddleware, SearchController.executeSearch);
 
 export default router;
