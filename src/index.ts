@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from "express";
+import cookieParser from "cookie-parser";
 import { pool } from "./db.js";
 import searchRouter from "./routes/search-routes.js";
 import authRoute from "./routes/auth-routes.js";
@@ -7,6 +8,7 @@ import { CONFIG } from "./config/constants.js";
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Routes
 app.use("/api", searchRouter);

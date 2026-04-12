@@ -55,11 +55,9 @@ export class AuthController {
 
       const user = await authService.loginUser(email, password);
 
-      const token = jwt.sign(
-        { id: user.id, role: user.role, email: user.email },
-        CONFIG.SECRET_KEY as string,
-        { expiresIn: "1h" },
-      );
+      const token = jwt.sign(user, CONFIG.SECRET_KEY as string, {
+        expiresIn: "1h",
+      });
 
       // 1. Define Cookie Options
       const cookieOptions = {
