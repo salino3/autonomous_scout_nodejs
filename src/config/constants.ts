@@ -3,6 +3,7 @@ dotenv.config();
 
 export const CONFIG = {
   PORT: process.env.PORT || 3000,
+  SECRET_KEY: process.env.SECRET_KEY,
 };
 
 export const DB_CONFIG = {
