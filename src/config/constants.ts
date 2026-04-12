@@ -9,7 +9,7 @@ export const DB_CONFIG = {
   USER: process.env.DB_USER,
   HOST: process.env.DB_HOST,
   PASSWORD: process.env.DB_PASSWORD,
-  DATABASE: process.env.DB_NAME,
+  DATABASE: process.env.DB_DATABASE,
   PORT_DB: process.env.DB_PORT || 5432,
 };
 
