@@ -17,7 +17,11 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  const token = req.cookies.user_session;
+  let token = req.cookies.user_session;
+
+  if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1]; // Get the string after "Bearer ", for mobile usually
+  }
 
   if (!token) {
     return res.status(401).json({ error: "Access denied. Please login." });
