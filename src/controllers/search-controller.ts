@@ -68,8 +68,14 @@ export class SearchController {
         }
       }
 
+      //
+      // Filter out duplicates so each domainHash is unique
+      const uniqueFindings = Array.from(
+        new Map(allFindings.map((item) => [item.domainHash, item])).values(),
+      );
+
       // --- STEP 3: BULK PERSIST (Single trip to DB) ---
-      if (allFindings.length > 0) {
+      if (uniqueFindings.length > 0) {
         const bulkQuery = `
           WITH data_input AS (
             SELECT * FROM jsonb_to_recordset($1::jsonb) AS x(
@@ -97,7 +103,7 @@ export class SearchController {
         `;
 
         await pool.query(bulkQuery, [
-          JSON.stringify(allFindings), // $1
+          JSON.stringify(uniqueFindings), // $1
           userId, // $2
           taskId, // $3
         ]);

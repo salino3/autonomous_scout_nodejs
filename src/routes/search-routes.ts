@@ -6,8 +6,12 @@ const router = Router();
 
 router.post("/search", authMiddleware, SearchController.executeSearch);
 
-router.get("/history", authMiddleware, SearchController.getTaskHistory);
+router.get("/search-history", authMiddleware, SearchController.getTaskHistory);
 
-router.get("/task/:taskId", authMiddleware, SearchController.getTaskResults);
+router.get(
+  "/search-task/:taskId",
+  authMiddleware,
+  SearchController.getTaskResults,
+);
 
 export default router;
