@@ -126,4 +126,58 @@ export class SearchController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  //
+  static async getTaskHistory(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+
+      // Fetch all tasks for this user, ordered by the most recent
+      const result = await pool.query(
+        `SELECT id, title, keywords, status, last_run_at 
+       FROM scout_tasks 
+       WHERE user_id = $1 
+       ORDER BY created_at DESC`,
+        [userId],
+      );
+
+      return res.status(200).json({
+        success: true,
+        tasks: result.rows,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  //
+  static async getTaskResults(req: AuthRequest, res: Response) {
+    try {
+      const { taskId } = req.params;
+      const userId = req.user?.id;
+
+      const query = `
+      SELECT 
+        cm.name, 
+        cm.domain, 
+        cm.email, 
+        cm.phone, 
+        uf.score, 
+        uf.status
+      FROM user_findings uf
+      JOIN companies_master cm ON uf.company_domain_hash = cm.domain_hash
+      WHERE uf.task_id = $1 AND uf.user_id = $2
+      ORDER BY uf.score DESC
+    `;
+
+      const result = await pool.query(query, [taskId, userId]);
+
+      return res.status(200).json({
+        success: true,
+        leads: result.rows,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
 }
