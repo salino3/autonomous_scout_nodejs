@@ -73,6 +73,7 @@ export class AuthController {
         success: true,
         message: "Login successful",
         user,
+        token,
       });
     } catch (error: any) {
       return res.status(401).json({ error: error.message });
