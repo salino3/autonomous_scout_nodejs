@@ -14,6 +14,11 @@ const BLACKLIST = [
   "yellowpages",
   "pdf",
   "crunchbase",
+  "jobtome",
+  "jooble",
+  "jobeka",
+  "indeed",
+  "englishjobs",
 ];
 
 export const isRealCompanySite = (url: string): boolean => {
