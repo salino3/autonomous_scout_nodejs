@@ -15,7 +15,7 @@ export class SearchController {
   static async executeSearch(req: AuthRequest, res: Response) {
     try {
       const { query, requirements, title } = req.body;
-      const userId = req.user?.id; // Grabbed from JWT by your middleware!
+      const userId = req.user?.id;
 
       if (!query || !userId) {
         return res.status(400).json({ error: "Missing query or unauthorized" });
@@ -29,9 +29,11 @@ export class SearchController {
       );
       const taskId = taskResult.rows[0].id;
 
-      // --- STEP 2: RUN THE SCOUT (Your existing logic) ---
+      // --- STEP 2: RUN THE SCOUT ---
       const rawResults = await serperService.getSearchResults(query);
-      let bestLeads = [];
+
+      // We use 'allFindings' to store everything for the Bulk DB call
+      let allFindings: any[] = [];
 
       for (const item of rawResults) {
         if (!isRealCompanySite(item.link)) continue;
@@ -46,65 +48,78 @@ export class SearchController {
             requirements,
           );
 
-          // --- STEP 3: PERSIST DATA TO DB ---
-
-          // Generate a domain_hash (Standard ID for our companies)
           const domain = new URL(item.link).hostname;
           const domainHash = crypto
             .createHash("md5")
             .update(domain)
             .digest("hex");
 
-          // One query, two tables affected!
-          const compositeQuery = `
-                  WITH upserted_company AS (
-                    INSERT INTO companies_master (domain_hash, name, domain, email, phone, last_scanned_at)
-                    VALUES ($1, $2, $3, $4, $5, NOW())
-                    ON CONFLICT (domain_hash) DO UPDATE SET 
-                      name = EXCLUDED.name,
-                      email = EXCLUDED.email,
-                      phone = EXCLUDED.phone,
-                      last_scanned_at = NOW()
-                    RETURNING domain_hash
-                  )
-                  INSERT INTO user_findings (user_id, task_id, company_domain_hash, score)
-                  SELECT $6, $7, domain_hash, $8 FROM upserted_company
-                  ON CONFLICT (user_id, task_id, company_domain_hash) DO NOTHING;
-                `;
-
-          await pool.query(compositeQuery, [
-            domainHash, // $1
-            item.title, // $2
-            domain, // $3
-            companyDNA.email, // $4
-            companyDNA.phone, // $5
-            userId, // $6
-            taskId, // $7
-            score, // $8
-          ]);
-
-          bestLeads.push({
-            title: item.title,
-            url: item.link,
+          allFindings.push({
+            domainHash,
+            name: item.title,
+            domain,
+            email: companyDNA.email || null,
+            phone: companyDNA.phone || null,
             score: score,
-            details: companyDNA,
+            details: companyDNA, // Keep this for the final JSON response
           });
         } catch (err) {
           console.error(`⚠️ Failed to analyze ${item.link}`);
         }
       }
 
+      // --- STEP 3: BULK PERSIST (Single trip to DB) ---
+      if (allFindings.length > 0) {
+        const bulkQuery = `
+          WITH data_input AS (
+            SELECT * FROM jsonb_to_recordset($1::jsonb) AS x(
+              "domainHash" text, 
+              "name" text, 
+              "domain" text, 
+              "email" text, 
+              "phone" text, 
+              "score" numeric
+            )
+          ),
+          upserted_companies AS (
+            INSERT INTO companies_master (domain_hash, name, domain, email, phone, last_scanned_at)
+            SELECT "domainHash", "name", "domain", "email", "phone", NOW() FROM data_input
+            ON CONFLICT (domain_hash) DO UPDATE SET 
+              name = EXCLUDED.name,
+              email = EXCLUDED.email,
+              phone = EXCLUDED.phone,
+              last_scanned_at = NOW()
+            RETURNING domain_hash
+          )
+          INSERT INTO user_findings (user_id, task_id, company_domain_hash, score)
+          SELECT $2, $3, "domainHash", "score" FROM data_input
+          ON CONFLICT (user_id, task_id, company_domain_hash) DO NOTHING;
+        `;
+
+        await pool.query(bulkQuery, [
+          JSON.stringify(allFindings), // $1
+          userId, // $2
+          taskId, // $3
+        ]);
+      }
+
       // --- STEP 4: FINALIZE TASK ---
+      // TODO: Make this function in DB with SQL executes just after big SQL loop if it is everything fine
       await pool.query(
         `UPDATE scout_tasks SET status = 'completed', last_run_at = NOW() WHERE id = $1`,
         [taskId],
       );
 
-      // Return results to frontend
+      // Return results (Sorted by score, top 5)
+      const topLeads = allFindings
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
       return res.status(200).json({
         success: true,
         taskId: taskId,
-        leads: bestLeads.sort((a, b) => b.score - a.score).slice(0, 5),
+        count: topLeads.length,
+        leads: topLeads,
       });
     } catch (error: any) {
       console.error("Scout Error:", error);
