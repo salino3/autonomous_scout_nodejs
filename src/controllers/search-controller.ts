@@ -29,8 +29,35 @@ export class SearchController {
       );
       const taskId = taskResult.rows[0].id;
 
+      // --- RANDOMIZER LOGIC ---
+      const modifiers = [
+        "careers",
+        "about us",
+        "team",
+        "jobs",
+        "headquarters",
+        "tech stack",
+        "working at",
+        "IT",
+      ];
+
+      // 1. Pick a random modifier
+      const baseModifier =
+        modifiers[Math.floor(Math.random() * modifiers.length)] ?? "";
+
+      // 2. Apply random casing to the modifier (e.g., "Careers", "cAREERS", "careers")
+      const randomModifier =
+        Math.random() > 0.5
+          ? baseModifier.toUpperCase()
+          : baseModifier.charAt(0).toUpperCase() +
+            baseModifier.slice(1).toLowerCase();
+
+      // Example: "Software Firenze Developer Milano" becomes
+      // "Software Firenze Developer Milano careers"
+      const randomizedQuery = `${query} ${randomModifier}`;
+
       // --- STEP 2: RUN THE SCOUT ---
-      const rawResults = await serperService.getSearchResults(query);
+      const rawResults = await serperService.getSearchResults(randomizedQuery);
 
       // We use 'allFindings' to store everything for the Bulk DB call
       let allFindings: any[] = [];
