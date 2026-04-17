@@ -3,9 +3,18 @@ import cookieParser from "cookie-parser";
 import { pool } from "./db.js";
 import searchRouter from "./routes/search-routes.js";
 import authRoute from "./routes/auth-routes.js";
+import limiters from "./middlewares/limiters.js";
 import { CONFIG } from "./config/constants.js";
 
 const app = express();
+
+// Trust the cloud proxy to see real individual IPs
+app.set("trust proxy", 1);
+
+// Apply the custom rate limiter
+app.use(limiters.secondsLimiter);
+app.use(limiters.dailyLimiter);
+app.use(limiters.globalDailyLimiter);
 
 app.use(express.json());
 app.use(cookieParser());
