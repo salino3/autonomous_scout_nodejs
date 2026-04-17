@@ -5,6 +5,7 @@ export const CONFIG = {
   PORT: process.env.PORT || 3000,
   SECRET_KEY: process.env.SECRET_KEY,
   COOKIES_NAME: process.env.COOKIES_NAME,
+  FRONT_END_PORT: process.env.FRONT_END_PORT,
 };
 
 export const DB_CONFIG = {
