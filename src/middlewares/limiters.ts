@@ -8,6 +8,9 @@ const secondsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   // This stays default (per IP) to prevent one person from spamming
+  // Cloudflare, the real user IP is passed in a special heade
+  keyGenerator: (req) =>
+    (req.headers["cf-connecting-ip"] as string) || req.ip || "unknown",
 });
 
 // 2. Daily Limit by IP: 500 per 24 hours (Per IP)
@@ -18,6 +21,9 @@ const dailyLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false,
   // This stays default (per IP) to prevent one person from spamming
+  // Cloudflare, the real user IP is passed in a special heade
+  keyGenerator: (req) =>
+    (req.headers["cf-connecting-ip"] as string) || req.ip || "unknown",
 });
 
 // 3. Global Server Limit: 1000 per 24 hours (Total for everyone)
