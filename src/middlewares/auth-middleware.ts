@@ -17,7 +17,7 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  let token = req.cookies.user_session;
+  let token = req.cookies[CONFIG.COOKIES_NAME as string];
 
   if (!token && req.headers.authorization?.startsWith("Bearer ")) {
     token = req.headers.authorization.split(" ")[1]; // Get the string after "Bearer ", for mobile usually
