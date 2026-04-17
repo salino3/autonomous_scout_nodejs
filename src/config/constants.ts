@@ -4,6 +4,7 @@ dotenv.config();
 export const CONFIG = {
   PORT: process.env.PORT || 3000,
   SECRET_KEY: process.env.SECRET_KEY,
+  COOKIES_NAME: process.env.COOKIES_NAME,
 };
 
 export const DB_CONFIG = {

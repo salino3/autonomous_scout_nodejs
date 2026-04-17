@@ -67,7 +67,7 @@ export class AuthController {
         expires: new Date(Date.now() + 3600 * 1000),
       };
 
-      res.cookie("user_session", token, cookieOptions);
+      res.cookie(CONFIG.COOKIES_NAME as string, token, cookieOptions);
 
       return res.status(200).json({
         success: true,
@@ -77,6 +77,47 @@ export class AuthController {
       });
     } catch (error: any) {
       return res.status(401).json({ error: error.message });
+    }
+  }
+
+  //
+  static async refreshToken(req: Request, res: Response) {
+    const token = req.cookies.refresh_token;
+
+    if (!token) {
+      return res.status(401).json({ error: "No refresh token found" });
+    }
+
+    try {
+      // 1. Verify token
+      const decodedToken = jwt.verify(
+        token,
+        CONFIG.SECRET_KEY as string,
+      ) as any;
+
+      // Remove 'iat' and 'exp' from decoded so jwt.sign creates new ones
+      const { iat, exp, ...userData } = decodedToken;
+
+      // 2. Create new token
+      const newToken = jwt.sign(userData, CONFIG.SECRET_KEY as string, {
+        expiresIn: "1h",
+      });
+
+      // 3. Overwrite the old cookie with the new token
+      res.cookie(CONFIG.COOKIES_NAME as string, newToken, {
+        httpOnly: true, // cookie cannot be accessed via document.cookie
+        secure: process.env.NODE_ENV === "production", // Only over HTTPS in prod
+        sameSite: "lax" as const, // Protects against CSRF
+        expires: new Date(Date.now() + 3600 * 1000),
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Token refreshed", user: userData });
+    } catch (err) {
+      return res
+        .status(403)
+        .json({ error: "Refresh token expired or invalid" });
     }
   }
 }
