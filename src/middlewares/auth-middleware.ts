@@ -1,6 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { CONFIG } from "../config/constants.js";
+import type { UserRole } from "../controllers/users-controllers.js";
 
 // Extend Express Request type to include the user data
 export interface AuthRequest extends Request {
@@ -47,3 +48,27 @@ export const authMiddleware = (
       .json({ error: "Invalid or expired session. Please login again." });
   }
 };
+
+export const roleMiddleware =
+  (allowedRoles: UserRole[]) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    let token = req.cookies[CONFIG.COOKIES_NAME as string];
+
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1]; // Get the string after "Bearer ", for mobile usually
+    }
+
+    if (!token) {
+      return res.status(401).json({ error: "Access denied. Please login." });
+    }
+
+    if (
+      req.user &&
+      req.user.role &&
+      allowedRoles.includes(req.user.role as UserRole)
+    ) {
+      next();
+    } else {
+      return res.status(401).json({ error: "Access denied." });
+    }
+  };

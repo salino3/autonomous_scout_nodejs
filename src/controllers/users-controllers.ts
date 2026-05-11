@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import { pool } from "../db.js";
 
-type UserRole = "client" | "admin" | "company";
+export type UserRole = "client" | "admin" | "company";
 
 export interface UsersRequest {
   id: string;
