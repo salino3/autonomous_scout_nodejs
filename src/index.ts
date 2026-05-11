@@ -4,6 +4,7 @@ import cors from "cors";
 import { pool } from "./db.js";
 import searchRouter from "./routes/search-routes.js";
 import authRoute from "./routes/auth-routes.js";
+import usersRoute from "./routes/users-routes.js";
 import limiters from "./middlewares/limiters.js";
 import { CONFIG } from "./config/constants.js";
 
@@ -33,6 +34,7 @@ app.use(limiters.globalDailyLimiter);
 // Routes
 app.use("/api", searchRouter);
 app.use("/api/auth", authRoute);
+app.use("/api/users", usersRoute);
 
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "OK", message: "Scout Agent is active" });
