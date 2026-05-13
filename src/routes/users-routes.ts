@@ -14,4 +14,6 @@ router.get(
   UsersControllers.getAllUsers,
 );
 
+router.patch("/remove/:id", authMiddleware, UsersControllers.desactiveUser);
+
 export default router;
