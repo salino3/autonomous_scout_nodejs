@@ -78,4 +78,44 @@ export class UsersControllers {
       });
     }
   }
+
+  //
+  static async deleteUserByAdmin(
+    req: AuthRequest,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const { userId } = req.params;
+      const userRole: string = req.user?.role ?? "";
+
+      if (!userId) {
+        return res.status(400).json({ error: "User id is mandatory" });
+      }
+
+      if (userRole !== "admin") {
+        return res
+          .status(401)
+          .json({ error: "Access denied. Unauthorized action." });
+      }
+
+      const query: string = `
+      DELETE FROM users WHERE id = $1
+    `;
+      const result = await pool.query(query, [userId]);
+
+      if (result.rowCount !== 1) {
+        return res
+          .status(404)
+          .json({ error: `User with id ${userId} not found` });
+      }
+
+      return res
+        .status(200)
+        .json({ message: `User with id ${userId} deleted successfully` });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal server error",
+      });
+    }
+  }
 }

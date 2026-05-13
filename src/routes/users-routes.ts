@@ -16,4 +16,11 @@ router.get(
 
 router.patch("/remove/:id", authMiddleware, UsersControllers.desactiveUser);
 
+router.delete(
+  "/delete/by-admin/:userId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  UsersControllers.deleteUserByAdmin,
+);
+
 export default router;
