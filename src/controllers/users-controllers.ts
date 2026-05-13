@@ -65,7 +65,7 @@ export class UsersControllers {
     `;
       const result = await pool.query(query, [id]);
 
-      if (result.rows.length === 0) {
+      if (result.rowCount !== 1) {
         return res.status(404).json({ error: `User with id ${id} not found` });
       }
 
